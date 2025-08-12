@@ -1,5 +1,6 @@
 import os
 import _io
+import shutil
 
 def create_casedir(case_dir:str, exist_ok:bool = True)->None:
     """Create a case directory with the necessary subdirectories.
@@ -11,6 +12,7 @@ def create_casedir(case_dir:str, exist_ok:bool = True)->None:
     os.makedirs(f"{case_dir}/constant", exist_ok=exist_ok)
     os.makedirs(f"{case_dir}/system", exist_ok=exist_ok)
     os.makedirs(f"{case_dir}/0", exist_ok=exist_ok)
+    os.makedirs(f"{case_dir}/constant/triSurface", exist_ok=exist_ok)
 
 
 def delete_casedir(case_dir:str)->None:
@@ -58,3 +60,16 @@ def write_format(file:_io.TextIOWrapper, form:dict, name:str = "FoamFile")->None
     for key, value in form.items():
         write_value(file, key, value)
     file.write("}\n")
+
+def move_STL(case_dir: str, filename: str, copied: bool = True) -> None:
+    """Move or copy an STL file to the case directory.
+
+    Args:
+        case_dir (str): The OpenFOAM case directory.
+        filename (str): The path of the STL file to move/copy.
+        copied (bool, optional): If True, copy the file; if False, move it. Defaults to True.
+    """
+    if copied:
+        shutil.copy2(filename, f"{case_dir}/constant/triSurface")
+    else:
+        shutil.move(filename, f"{case_dir}/constant/triSurface")

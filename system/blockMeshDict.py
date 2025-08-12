@@ -57,7 +57,7 @@ def write_blockMeshDict(
         file.write("edges\n(\n")
         file.write(");\n")
 
-        faces = {"top": (4,5,6,7), "bottom": (0,3,2,1), "north": (3,7,6,2), "south": (0,4,7,3), "east": (3,7,6,2), "west": (1,5,4,0)}
+        faces = {"top": (4,5,6,7), "bottom": (0,3,2,1), "north": (3,7,6,2), "south": (1,5,4,0), "east": (0,4,7,3), "west": (2,6,5,1)}
         assert set(faces.keys()).issubset(boundary_types.keys())
         file.write("boundary\n(\n")
 
