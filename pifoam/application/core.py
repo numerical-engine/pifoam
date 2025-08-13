@@ -1,6 +1,7 @@
 import os
 from pifoam.mesh.core import coreMesher
 from pifoam import utils
+import subprocess
 
 class coreFoam:
     """Abstract class for application
@@ -15,6 +16,7 @@ class coreFoam:
     def __init__(self,
                 case_dir: str,
                 mesher:coreMesher,
+                phys_values_init:dict[str, any],
                 control_props:dict = None,
                 fvSchemes_props:dict = None,
                 fvSolution_props:dict = None,
@@ -24,6 +26,25 @@ class coreFoam:
         self.control_props = self.default_controlDict() if control_props is None else control_props
         self.fvSchemes_props = self.default_fvSchemes() if fvSchemes_props is None else fvSchemes_props
         self.fvSolution_props = self.default_fvSolution() if fvSolution_props is None else fvSolution_props
+        self.phys_values_init = phys_values_init
+
+        self.boundaryConditions = {
+            phys_v:{
+                boundary_n:{
+                    "type":None,
+                }
+                for boundary_n in self.mesher.get_boundary_names()
+            }
+            for phys_v in self.phys_values
+        }
+
+    def set_controlDict(self, category:str, value:any)->None:
+        self.control_props[category] = value
+
+    def set_boundaryCondition(self, phys_v:str, boundary_n:str, b_type:str, value:str = None)->None:
+        self.boundaryConditions[phys_v][boundary_n]["type"] = b_type
+        if value is not None:
+            self.boundaryConditions[phys_v][boundary_n]["value"] = value
 
     def default_controlDict(self)->dict:
         raise NotImplementedError("Method 'default_controlDict' must be implemented in subclasses.")
@@ -79,6 +100,9 @@ class coreFoam:
     
     def write_transportProperties(self)->None:
         raise NotImplementedError("Method 'write_transportProperties' must be implemented in subclasses.")
+    
+    def write_initial_conditions(self)->None:
+        raise NotImplementedError("Method 'write_initial_conditions' must be implemented in subclasses.")
 
     def setup(self)->None:
         self.create_dir()
@@ -86,6 +110,13 @@ class coreFoam:
         self.write_fvSolution()
         self.write_controlDict()
         self.write_transportProperties()
+        self.write_initial_conditions()
+    
+    def run(self, show_log:bool = False)->None:
+        if show_log:
+            subprocess.run([self.application, "-case", self.case_dir])
+        else:
+            subprocess.run([self.application, "-case", self.case_dir], stdout=subprocess.DEVNULL)
 
 
 class coreFoam_steady(coreFoam):
@@ -110,14 +141,14 @@ class coreFoam_steady(coreFoam):
 class coreFoam_transient(coreFoam):
     def default_controlDict(self):
         return {
-            "startFrom" : "startTime",
+            "startFrom" : "latestTime",
             "startTime" : 0,
             "stopAt" : "endTime",
             "endTime" : 1.0,
             "deltaT" : 0.01,
             "writeControl" : "timeStep",
             "writeInterval" : 1,
-            "purgeWrite" : 1,
+            "purgeWrite" : 0,
             "writeFormat" : "ascii",
             "writePrecision" : 6,
             "writeCompression" : "off",

@@ -142,3 +142,11 @@ class snappyHexMesh(coreMesher):
         self.write(case_dir)
         run_blockMesh(case_dir)
         subprocess.run(["snappyHexMesh", "-case", case_dir, "-overwrite"], stdout=subprocess.DEVNULL)
+    
+    def get_boundary_names(self)->list[str]:
+        boundary_names = ["top", "bottom", "north", "south", "east", "west"]
+
+        for stl_sn in self.stl_surfacename:
+            boundary_names.append(f"{self.stlName}_{stl_sn}")
+        
+        return boundary_names
