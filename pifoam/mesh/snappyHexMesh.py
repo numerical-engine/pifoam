@@ -146,7 +146,10 @@ class snappyHexMesh(coreMesher):
     def get_boundary_names(self)->list[str]:
         boundary_names = ["top", "bottom", "north", "south", "east", "west"]
 
-        for stl_sn in self.stl_surfacename:
-            boundary_names.append(f"{self.stlName}_{stl_sn}")
+        if len(self.stl_surfacename) == 1:
+            boundary_names.append(self.stlName)
+        else:
+            for stl_sn in self.stl_surfacename:
+                boundary_names.append(f"{self.stlName}_{stl_sn}")
         
         return boundary_names
